@@ -9,11 +9,23 @@ __date__ = "February 2023"
 import sys
 import random
 import time
+import math
 
 # Your job is to modify the ComputerPlayerclass in connect4player.py
 
-
 class ComputerPlayer:
+    CONNECT_WINDOW_LEN = 4
+    # scoring
+    INFINITY = math.inf
+    CONNECT3 = 100
+    CONNECT2 = 10
+    SOLO_DISC = 1
+    ENEMY_DISC = 0
+    # game piece representation
+    EMPTY_SLOT = 0
+    PLAYER1_DISC = 1
+    PLAYER2_DISC = 2
+
     def __init__(self, id, difficulty_level):
         """
         Constructor, takes a difficulty level (likely the # of plies to look
@@ -42,47 +54,53 @@ class ComputerPlayer:
             play = random.randrange(0, len(rack))
             if rack[play][-1] == 0:
                 return play
-
+    
+    # Inspects windows of size 4 of diagonal elements from a 2D array.
     def sliding_window(self,board):
-        """
-        Inspects windows of size 4 of diagonal elements from a 2D array.
-        """
         rows = len(board)
         columns = len(board[0])
-        window_size = 4
         quartet = []
 
         # vertical
-        for i in range(rows - (rows-window_size) - 1):
-            for j in range(columns):
+        for row in range(rows - (rows - self.CONNECT_WINDOW_LEN) - 1):
+            for col in range(columns):
                 # gets the values not the coords
                 window = []
-                for index_offset in range(window_size):
-                    window.append(board[i + index_offset][j])
+                for index_offset in range(self.CONNECT_WINDOW_LEN):
+                    window.append(board[row + index_offset][j])
                 quartet.append(window)
 
         # horizontal
-        for i in range(rows):
-            for j in range(columns - (rows-window_size) - 1):
+        for row in range(rows):
+            for col in range(columns - (rows - self.CONNECT_WINDOW_LEN) - 1):
                 # gets the values not the coords
-                window = [board[i][j + index_offset] for index_offset in range(window_size)]
+                window = [board[row][col + index_offset] for index_offset in range(self.CONNECT_WINDOW_LEN)]
                 quartet.append(window)
 
         # down-left diagonal
-        for i in range(rows - window_size + 1):
-            for j in range(columns - window_size + 1):
+        for row in range(rows - self.CONNECT_WINDOW_LEN + 1):
+            for col in range(columns - self.CONNECT_WINDOW_LEN + 1):
                 # gets the values not the coords
-                window = [board[i + index_offset][j + index_offset] for index_offset in range(window_size)]
+                window = [board[row + index_offset][col + index_offset] for index_offset in range(self.CONNECT_WINDOW_LEN)]
                 quartet.append(window)
 
         # up-right diagonal
-        for i in range(rows - window_size + 1):
-            for j in range(window_size - 1, columns):
+        for row in range(rows - self.CONNECT_WINDOW_LEN + 1):
+            for col in range(self.CONNECT_WINDOW_LEN - 1, columns):
                 # gets the values not the coords
-                window = [board[i + index_offset][j - index_offset] for index_offset in range(window_size)]
+                window = [board[row + index_offset][col - index_offset] for index_offset in range(self.CONNECT_WINDOW_LEN)]
                 quartet.append(window)
         
         print("quartets " + str(len(quartet)))
+    
+    def evaluate(self,board):
+        # Point value is positive if it favors the AI, and negative if it favors its opponent.
+        # If it contains at least one disc of each color, it cannot be used to win. It is worth 0.
+        # If it contains 4 discs of the same color, it is worth ±∞ (since one player has won).
+        # If it contains 3 discs of the same color (and 1 empty) it is worth ±100.
+        # If it contains 2 discs of the same color (and 2 empties) it is worth ±10.
+        # If it contains 1 disc (and 3 empties) it is worth ±1.
+        pass
 
 if __name__ == "__main__":
     board = [[i * 7 + j for j in range(7)] for i in range(6)]
