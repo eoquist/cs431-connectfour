@@ -12,7 +12,6 @@ import time
 import math
 
 # Your job is to modify the ComputerPlayerclass in connect4player.py
-
 class ComputerPlayer:
     CONNECT_WINDOW_LEN = 4
     PLAYER_ID = 0
@@ -38,23 +37,34 @@ class ComputerPlayer:
         """
         Rack is a tuple of tuples,column-major order. 0 indicates empty, 1 or 2 indicate player discs. 
         Column 0 is on the left, and row 0 is on the bottom. 
+
+        If the rack is under a certain dimension size then there's nothing that can be done but it should still play 
         """
-        # This will slow things down but I misunderstood things
-        column_major = [[row[column] for row in rack] for column in range(len(rack[0]))]
-        # If the rack is under a certain dimension size then there's nothing that can be done but it should still play 
+        column_major = [[row[column] for row in rack] for column in range(len(rack[0]))] # RIP row-major order
+        scores = []
+        play = 0
+        for row in range(len(column_major)):
+            if not (column_major[row][-1] == 0):
+                scores.append(None)
+                continue
+            for column in range(len(column_major[0]), 0, -1):
+                if column_major[row][column] == self.EMPTY_SLOT:
+                    column_major[row][column] = self.PLAYER_ID
+                    minimax_score = self._minimax(column_major, self.DIFFICULTY, self.PLAYER_ID)
+                    scores.append(minimax_score)
+                    column_major[row][column] = self.EMPTY_SLOT
+                else:
+                    scores.append(None)
 
-        play, minimax_score = self._minimax(column_major, self.DIFFICULTY, self.PLAYER_ID)
-        # play, minimax_score = self._minimax_alphabeta(column_major, self.DIFFICULTY, -self.INFINITY, self.INFINITY, self.PLAYER_ID)
+        play = column_major.index(max(scores))
+        return play
 
-        # WIP
-        time.sleep(0.5)  # pause purely for effect--real AIs shouldn't do this
-        while True:
-            # play = random.randrange(0, len(rack))
-            if column_major[play][-1] == 0:
-                return play
+        # while True:
+        #     # play = random.randrange(0, len(rack))
+        #     if column_major[play][-1] == 0:
+        #         return play
             
         
-    
     # Inspects windows of size 4 of diagonal elements from a 2D array.
     def _sliding_window(self,board):
         # gets the values not the coords
@@ -102,40 +112,40 @@ class ComputerPlayer:
         return quartet
     
 
+    def evaluate_quartet(self, quartet, player_disc):
+        score = 0
+        opponent_disc = self.PLAYER2_DISC
+        if player_disc == self.PLAYER2_DISC:
+            opponent_disc = self.PLAYER1_DISC
+
+        player_disc_count = quartet.count(player_disc)
+        opponent_disc_count = quartet.count(opponent_disc)
+        empty_slot_count = quartet.count(self.EMPTY_SLOT)
+
+        if player_disc_count == 4:
+            score += self.INFINITY
+        elif player_disc_count == 3 and empty_slot_count == 1:
+            score += self.CONNECT3
+        elif player_disc_count == 2 and empty_slot_count == 2:
+            score += self.CONNECT2
+        elif player_disc_count == 1 and empty_slot_count == 3:
+            score += self.SOLO_DISC
+
+        if opponent_disc_count == 4:
+            score -= self.INFINITY
+        elif opponent_disc_count == 3 and empty_slot_count == 1:
+            score -= self.CONNECT3
+        elif opponent_disc_count == 2 and empty_slot_count == 2:
+            score -= self.CONNECT2
+        elif opponent_disc_count == 1 and empty_slot_count == 3:
+            score -= self.SOLO_DISC
+
+        return score
+    
     def _evaluate(self,board):
         rows = len(board)
         columns = len(board[0])
         score = 0
-        column_choice = 0 # need to find best column
-
-        def evaluate_quartet(self, quartet, player_disc):
-            opponent_disc = self.PLAYER2_DISC
-            if player_disc == self.PLAYER2_DISC:
-                opponent_disc = self.PLAYER1_DISC
-
-            player_disc_count = quartet.count(player_disc)
-            opponent_disc_count = quartet.count(opponent_disc)
-            empty_slot_count = quartet.count(self.EMPTY_SLOT)
-
-            if player_disc_count == 4:
-                score += self.INFINITY
-            elif player_disc_count == 3 and empty_slot_count == 1:
-                score += self.CONNECT3
-            elif player_disc_count == 2 and empty_slot_count == 2:
-                score += self.CONNECT2
-            elif player_disc_count == 1 and empty_slot_count == 3:
-                score += self.SOLO_DISC
-
-            if opponent_disc_count == 4:
-                score -= self.INFINITY
-            elif opponent_disc_count == 3 and empty_slot_count == 1:
-                score -= self.CONNECT3
-            elif opponent_disc_count == 2 and empty_slot_count == 2:
-                score -= self.CONNECT2
-            elif opponent_disc_count == 1 and empty_slot_count == 3:
-                score -= self.SOLO_DISC
-
-            return score
     
         # print("_evaluate vertical")
         for row in range(rows - self.CONNECT_WINDOW_LEN + 1):
@@ -144,7 +154,6 @@ class ComputerPlayer:
                 for index_offset in range(self.CONNECT_WINDOW_LEN):
                     window.append(board[row + index_offset][col])
                 score += self._evaluate_quartet(window, self.PLAYER_ID)
-                # if score +INFINTY then column_choice = col
 
         # print("_evaluate horizontal")
         for row in range(rows):
@@ -153,8 +162,6 @@ class ComputerPlayer:
                 for index_offset in range(self.CONNECT_WINDOW_LEN):
                     window.append(board[row][col + index_offset])
                 score += self._evaluate_quartet(window, self.PLAYER_ID)
-                # find col ?
-                # column_choice
 
         # print("_evaluate down-left diagonal") 
         for row in range(rows - self.CONNECT_WINDOW_LEN + 1):
@@ -163,8 +170,6 @@ class ComputerPlayer:
                 for index_offset in range(self.CONNECT_WINDOW_LEN):
                     window.append(board[row + index_offset][col  + index_offset])
                 score += self._evaluate_quartet(window, self.PLAYER_ID)
-                # find col ?
-                # column_choice
 
         # print("_evaluate up-right diagonal")
         for row in range(rows - self.CONNECT_WINDOW_LEN + 1):
@@ -173,19 +178,20 @@ class ComputerPlayer:
                 for index_offset in range(self.CONNECT_WINDOW_LEN):
                     window.append(board[row + index_offset][col  - index_offset])
                 score += self._evaluate_quartet(window, self.PLAYER_ID)
-                # find col ?
-                # column_choice
-        return column_choice, score
+
+        return score
 
 
     def _minimax(self, board, depth, player):
-        if depth == 0: # or is terminal
-            return self._evaluate(board)
+        current_state_score = self._evaluate(board)
         legal_moves = self._get_legal_moves(board)
+        column_choice = random.choice(legal_moves) # temporary random choice
+
+        if depth == 0: # or is terminal
+            return current_state_score
 
         if player == self.PLAYER_ID:
             best_value = -self.INFINITY
-            column_choice = random.choice(legal_moves) # temporary random choice
             for column in legal_moves:
                 board_copy = board.copy()
                 new_state = self.pick_move(board_copy)
@@ -196,7 +202,6 @@ class ComputerPlayer:
             return column_choice, best_value
         else:
             best_value = self.INFINITY
-            column_choice = random.choice(legal_moves) # temporary random choice
             for column in legal_moves:
                 board_copy = board.copy()
                 new_state = self.pick_move(board_copy)
