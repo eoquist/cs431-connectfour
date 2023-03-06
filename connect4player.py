@@ -66,7 +66,7 @@ class ComputerPlayer:
         # If it contains 2 discs of the same color (and 2 empties) it is worth ±10.
         # If it contains 1 disc (and 3 empties) it is worth ±1.
 
-        print("vertical")
+        # print("vertical")
         for row in range(rows - self.CONNECT_WINDOW_LEN + 1):
             for col in range(columns):
                 # gets the values not the coords
@@ -74,9 +74,10 @@ class ComputerPlayer:
                 for index_offset in range(self.CONNECT_WINDOW_LEN):
                     window.append(board[row + index_offset][col])
                 # print(window)
+                window.count()
                 quartet.append(window)
 
-        print("horizontal")
+        # print("horizontal")
         for row in range(rows):
             for col in range(columns - self.CONNECT_WINDOW_LEN + 1):
                 # gets the values not the coords
@@ -86,7 +87,7 @@ class ComputerPlayer:
                 # print(window)
                 quartet.append(window)
 
-        print("down-left diagonal") 
+        # print("down-left diagonal") 
         for row in range(rows - self.CONNECT_WINDOW_LEN + 1):
             for col in range(columns - self.CONNECT_WINDOW_LEN + 1):
                 # gets the values not the coords
@@ -96,7 +97,7 @@ class ComputerPlayer:
                 # print(window)
                 quartet.append(window)
 
-        print("up-right diagonal")
+        # print("up-right diagonal")
         for row in range(rows - self.CONNECT_WINDOW_LEN + 1):
             for col in range(columns - (self.CONNECT_WINDOW_LEN - 1)):
                 # gets the values not the coords
@@ -117,51 +118,60 @@ class ComputerPlayer:
         # If it contains 1 disc (and 3 empties) it is worth ±1.
         pass
 
-    # def _minimax_alphabeta(self, board, depth, alpha, beta, maximizingPlayer):
-    #     legal_moves = self._get_legal_moves(board)
-    #     is_terminal = is_terminal_node(board)
-    #     if depth == 0 or is_terminal:
-    #         if is_terminal:
-    #             if winning_move(board, AI_PIECE):
-    #                 return (None, 100000000000000)
-    #             elif winning_move(board, PLAYER_PIECE):
-    #                 return (None, -10000000000000)
-    #             else: # Game is over, no more valid moves
-    #                 return (None, 0)
-    #         else: # Depth is zero
-    #             return (None, score_position(board, AI_PIECE))
+    def _minimax_alphabeta(self, board, depth, alpha, beta, maximizingPlayer):
+        if depth == 0:
+            # return evaluation_function(state)
+            pass
+        legal_moves = self._get_legal_moves(board)
+        # is_terminal = is_terminal_node(board)
+        # if depth == 0 or is_terminal:
+        #     if is_terminal:
+        #         if winning_move(board, AI_PIECE):
+        #             return (None, 100000000000000)
+        #         elif winning_move(board, PLAYER_PIECE):
+        #             return (None, -10000000000000)
+        #         else: # Game is over, no more valid moves
+        #             return (None, 0)
+        #     else: # Depth is zero
+        #         return (None, score_position(board, AI_PIECE))
             
-    #     if maximizingPlayer: # MAX
-    #         value = -math.inf # self.INFINITY
-    #         column = random.choice(legal_moves) # !!! shouldn't be a random choice
-    #         for col in legal_moves:
-    #             row = get_next_open_row(board, col)
-    #             board_copy = board.copy()
-    #             drop_piece(board_copy, row, col, AI_PIECE)
-    #             new_score = self._minimax_alphabeta(board_copy, depth-1, alpha, beta, False)[1]
-    #             if new_score > value:
-    #                 value = new_score
-    #                 column = col
-    #             alpha = max(alpha, value)
-    #             if alpha >= beta:
-    #                 break
-    #         return column, value
+        if maximizingPlayer: # MAX
+            best_value = -self.INFINITY
+            column = random.choice(legal_moves) # !!! shouldn't be a random choice
 
-    #     else: # MIN
-    #         value = math.inf
-    #         column = random.choice(legal_moves)
-    #         for col in legal_moves:
-    #             row = get_next_open_row(board, col)
-    #             board_copy = board.copy()
-    #             drop_piece(board_copy, row, col, PLAYER_PIECE)
-    #             new_score = self._minimax_alphabeta(board_copy, depth-1, alpha, beta, True)[1]
-    #             if new_score < value:
-    #                 value = new_score
-    #                 column = col
-    #             beta = min(beta, value)
-    #             if alpha >= beta:
-    #                 break
-    #         return column, 
+            for column in legal_moves:
+                # row = get_next_open_row(board, col)
+                board_copy = board.copy()
+                # drop_piece(board_copy, row, col, AI_PIECE)
+                new_state = self.pick_move(board_copy)
+                value = self._minimax_alphabeta(new_state, depth - 1, alpha, beta, maximizingPlayer)
+                # if best_value > value:
+                #     value = new_score
+                #     column = col
+                best_value = max(best_value, value)
+                alpha = max(alpha, best_value)
+                if alpha >= beta:
+                    break
+            return column, best_value
+
+        else: # MIN
+            best_value = self.INFINITY
+            column = random.choice(legal_moves)
+
+            for column in legal_moves:
+                # row = get_next_open_row(board, col)
+                board_copy = board.copy()
+                # drop_piece(board_copy, row, col, PLAYER_PIECE)
+                new_state = self.pick_move(board_copy)
+                value = self._minimax_alphabeta(new_state, depth - 1, alpha, beta, maximizingPlayer)
+                best_value = min(best_value, value)
+                # if best_value < value:
+                #     value = new_score
+                #     column = col
+                beta = min(beta, best_value)
+                if beta <= alpha:
+                    break
+            return column, best_value
 
     
     # return array of valid moves
@@ -187,7 +197,3 @@ if __name__ == "__main__":
     print("=======================")
     player = ComputerPlayer(1,1)
     player._sliding_window(board)
-
-    # print(f"Arguments count: {len(sys.argv)}")
-    # for i, arg in enumerate(sys.argv):
-    #     print(f"Argument {i:>6}: {arg}")
