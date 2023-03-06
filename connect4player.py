@@ -43,7 +43,7 @@ class ComputerPlayer:
         column_major = [[row[column] for row in rack] for column in range(len(rack[0]))]
         # If the rack is under a certain dimension size then there's nothing that can be done but it should still play 
 
-        minimax_score = self._minimax(column_major, self.DIFFICULTY, self.PLAYER_ID)
+        play, minimax_score = self._minimax(column_major, self.DIFFICULTY, self.PLAYER_ID)
         # play, minimax_score = self._minimax_alphabeta(column_major, self.DIFFICULTY, -self.INFINITY, self.INFINITY, self.PLAYER_ID)
 
         # WIP
@@ -154,6 +154,7 @@ class ComputerPlayer:
                     window.append(board[row][col + index_offset])
                 score += self._evaluate_quartet(window, self.PLAYER_ID)
                 # find col ?
+                # column_choice
 
         # print("_evaluate down-left diagonal") 
         for row in range(rows - self.CONNECT_WINDOW_LEN + 1):
@@ -163,6 +164,7 @@ class ComputerPlayer:
                     window.append(board[row + index_offset][col  + index_offset])
                 score += self._evaluate_quartet(window, self.PLAYER_ID)
                 # find col ?
+                # column_choice
 
         # print("_evaluate up-right diagonal")
         for row in range(rows - self.CONNECT_WINDOW_LEN + 1):
@@ -172,7 +174,8 @@ class ComputerPlayer:
                     window.append(board[row + index_offset][col  - index_offset])
                 score += self._evaluate_quartet(window, self.PLAYER_ID)
                 # find col ?
-        return score
+                # column_choice
+        return column_choice, score
 
 
     def _minimax(self, board, depth, player):
@@ -187,7 +190,7 @@ class ComputerPlayer:
                 board_copy = board.copy()
                 new_state = self.pick_move(board_copy)
                 value = self._minimax(new_state, depth - 1, self.PLAYER_ID)
-                if best_value > value:
+                if best_value > value[1]:
                     value = best_value
                     column_choice = column
             return column_choice, best_value
@@ -198,8 +201,8 @@ class ComputerPlayer:
                 board_copy = board.copy()
                 new_state = self.pick_move(board_copy)
                 value = self._minimax(new_state, depth - 1, self.PLAYER_ID)
-                if best_value < value:
-                    value = best_value
+                if best_value < value[1]:
+                    value[1] = best_value
                     column_choice = column
             return column_choice, best_value
 
