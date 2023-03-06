@@ -172,6 +172,7 @@ class ComputerPlayer:
                     window.append(board[row + index_offset][col  - index_offset])
                 score += self._evaluate_quartet(window, self.PLAYER_ID)
                 # find col ?
+        return score
 
 
     def _minimax(self, board, depth, player):
