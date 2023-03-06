@@ -43,7 +43,7 @@ class ComputerPlayer:
         column_major = [[row[column] for row in rack] for column in range(len(rack[0]))]
         # If the rack is under a certain dimension size then there's nothing that can be done but it should still play 
 
-        play, minimax_score = self._minimax(column_major, self.DIFFICULTY, self.PLAYER_ID)
+        minimax_score = self._minimax(column_major, self.DIFFICULTY, self.PLAYER_ID)
         # play, minimax_score = self._minimax_alphabeta(column_major, self.DIFFICULTY, -self.INFINITY, self.INFINITY, self.PLAYER_ID)
 
         # WIP
