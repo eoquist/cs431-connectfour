@@ -43,20 +43,23 @@ class ComputerPlayer:
         column_major_copy = [[row[column] for row in rack] for column in range(len(rack[0]))] # RIP row-major order
         scores = []
         play = 0
-        for row in range(len(column_major_copy)):
+        for row in range(len(column_major_copy) - 1):
             if not (column_major_copy[row][-1] == 0):
-                scores.append(None)
+                # scores.append(0)
                 continue
-            for column in range(len(column_major_copy[0]), 0, -1):
+            for column in range(len(column_major_copy[0]) - 1, 0, -1):
                 if column_major_copy[row][column] == self.EMPTY_SLOT:
                     column_major_copy[row][column] = self.PLAYER_ID
                     minimax_score = self._minimax(column_major_copy, self.DIFFICULTY, self.PLAYER_ID)
+                    print(minimax_score)
                     scores.append(minimax_score)
                     column_major_copy[row][column] = self.EMPTY_SLOT
                 else:
-                    scores.append(None)
+                    # scores.append(0)
 
-        play = column_major_copy.index(max(scores))
+        max_score = max(scores)
+        play = scores.index(max_score)
+        
         return play
 
         # while True:
@@ -112,7 +115,7 @@ class ComputerPlayer:
         return quartet
     
 
-    def evaluate_quartet(self, quartet, player_disc):
+    def _evaluate_quartet(self, quartet, player_disc):
         score = 0
         opponent_disc = self.PLAYER2_DISC
         if player_disc == self.PLAYER2_DISC:
@@ -178,14 +181,13 @@ class ComputerPlayer:
                 for index_offset in range(self.CONNECT_WINDOW_LEN):
                     window.append(board[row + index_offset][col  - index_offset])
                 score += self._evaluate_quartet(window, self.PLAYER_ID)
-
+        
         return score
 
 
     def _minimax(self, board, depth, player):
         current_state_score = self._evaluate(board)
         legal_moves = self._get_legal_moves(board)
-        column_choice = random.choice(legal_moves) # temporary random choice
 
         if depth == 0: # or is terminal
             return current_state_score
@@ -198,8 +200,7 @@ class ComputerPlayer:
                 value = self._minimax(new_state, depth - 1, self.PLAYER_ID)
                 if best_value > value[1]:
                     value = best_value
-                    column_choice = column
-            return column_choice, best_value
+            return best_value
         else:
             best_value = self.INFINITY
             for column in legal_moves:
@@ -208,8 +209,7 @@ class ComputerPlayer:
                 value = self._minimax(new_state, depth - 1, self.PLAYER_ID)
                 if best_value < value[1]:
                     value[1] = best_value
-                    column_choice = column
-            return column_choice, best_value
+            return best_value
 
     
     # return array of valid moves
