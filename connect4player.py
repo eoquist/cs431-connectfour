@@ -40,28 +40,28 @@ class ComputerPlayer:
 
         If the rack is under a certain dimension size then there's nothing that can be done but it should still play 
         """
-        column_major = [[row[column] for row in rack] for column in range(len(rack[0]))] # RIP row-major order
+        column_major_copy = [[row[column] for row in rack] for column in range(len(rack[0]))] # RIP row-major order
         scores = []
         play = 0
-        for row in range(len(column_major)):
-            if not (column_major[row][-1] == 0):
+        for row in range(len(column_major_copy)):
+            if not (column_major_copy[row][-1] == 0):
                 scores.append(None)
                 continue
-            for column in range(len(column_major[0]), 0, -1):
-                if column_major[row][column] == self.EMPTY_SLOT:
-                    column_major[row][column] = self.PLAYER_ID
-                    minimax_score = self._minimax(column_major, self.DIFFICULTY, self.PLAYER_ID)
+            for column in range(len(column_major_copy[0]), 0, -1):
+                if column_major_copy[row][column] == self.EMPTY_SLOT:
+                    column_major_copy[row][column] = self.PLAYER_ID
+                    minimax_score = self._minimax(column_major_copy, self.DIFFICULTY, self.PLAYER_ID)
                     scores.append(minimax_score)
-                    column_major[row][column] = self.EMPTY_SLOT
+                    column_major_copy[row][column] = self.EMPTY_SLOT
                 else:
                     scores.append(None)
 
-        play = column_major.index(max(scores))
+        play = column_major_copy.index(max(scores))
         return play
 
         # while True:
         #     # play = random.randrange(0, len(rack))
-        #     if column_major[play][-1] == 0:
+        #     if column_major_copy[play][-1] == 0:
         #         return play
             
         
