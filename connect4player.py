@@ -55,6 +55,7 @@ class ComputerPlayer:
                     scores.append(minimax_score)
                     column_major_copy[row][column] = self.EMPTY_SLOT
                 else:
+                    pass
                     # scores.append(0)
 
         max_score = max(scores)
