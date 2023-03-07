@@ -25,7 +25,7 @@ class ComputerPlayer:
     CONNECT3 = 100
     CONNECT2 = 10
     SOLO_DISC = 1
-    ENEMY_DISC = 0
+    NOTHING = 0
     # game piece representation
     EMPTY_SLOT = 0
     PLAYER1_DISC = 1
@@ -38,6 +38,7 @@ class ComputerPlayer:
     def __init__(self, id, difficulty_level):
         self.PLAYER_ID = id
         self.DIFFICULTY = difficulty_level
+        self.BEST_MOVE = -1
         self.BEST_SCORE = self.NEGATIVE_INFINITY
 
     # Returns an int indicating in which column to drop a disc.
@@ -45,6 +46,8 @@ class ComputerPlayer:
         tuple_to_list_copy = [list(tuple) for tuple in rack]
         score = self._minimax(tuple_to_list_copy, self.DIFFICULTY, self.PLAYER_ID)
         print("best move " + str(self.BEST_MOVE))
+
+        # rand if -1 or col full
         return self.BEST_MOVE
 
     
@@ -75,10 +78,11 @@ class ComputerPlayer:
                 if next_legal_move == -1:
                     continue
                 rack[column][next_legal_move] = self.PLAYER_ID
-                minimax_score = self._minimax(rack, self.DIFFICULTY - 1, opponent_disc)
-                print("minimax max score " + str(minimax_score))
+                minimax_score = self._minimax(rack, depth - 1, opponent_disc)
+                print("minimax downright score " + str(minimax_score))
                 best_score = max(best_score, minimax_score)
-                if depth == self.DIFFICULTY:  
+                if (depth == self.DIFFICULTY) and (best_score > self.BEST_SCORE):  
+                    self.BEST_SCORE = best_score
                     self.BEST_MOVE = column
                 rack[column][next_legal_move] = self.EMPTY_SLOT
         else:
@@ -91,7 +95,7 @@ class ComputerPlayer:
                 if next_legal_move == -1:
                     continue
                 rack[column][next_legal_move] = opponent_disc
-                minimax_score = self._minimax(rack, self.DIFFICULTY - 1, self.PLAYER_ID)
+                minimax_score = self._minimax(rack, depth - 1, self.PLAYER_ID)
                 best_score = min(best_score, minimax_score)
                 rack[column][next_legal_move] = self.EMPTY_SLOT
         
@@ -102,12 +106,24 @@ class ComputerPlayer:
         if player_disc == self.PLAYER2_DISC:
             opponent_disc = self.PLAYER1_DISC
 
-        player_disc_count = quartet.count(player_disc)
-        opponent_disc_count = quartet.count(opponent_disc)
-        empty_slot_count = quartet.count(self.EMPTY_SLOT)
+        player_disc_count = 0
+        opponent_disc_count = 0
+        empty_slot_count = 0
+
+        for disc in quartet:
+            if disc == player_disc:
+                player_disc_count += 1
+            elif disc == opponent_disc:
+                opponent_disc_count += 1
+            else:
+                empty_slot_count += 1
+        
+        # player_disc_count = quartet.count(player_disc)
+        # opponent_disc_count = quartet.count(opponent_disc)
+        # empty_slot_count = quartet.count(self.EMPTY_SLOT)
 
         if (player_disc_count > 0) and (opponent_disc_count > 0):
-            return self.ENEMY_DISC
+            return self.NOTHING
 
         if player_disc_count == 4:
             return self.INFINITY
@@ -137,27 +153,39 @@ class ComputerPlayer:
 
         for row in range(rows):
             for col in range(columns):
-                quartet = []
                 
                 if (row + offset) < rows: # vertical
-                    for index_offset in range(self.CONNECT_WINDOW_LEN):
-                        quartet.append(rack[col][row + index_offset])     
-                    score += self._evaluate_quartet(quartet, self.PLAYER_ID)
+                    quartet = [rack[col][row], rack[col][row+1], rack[col][row+2], rack[col][row+3]]
+                    temp = self._evaluate_quartet(quartet, self.PLAYER_ID)
+                    # print(quartet)
+                    # print(temp)
+                    # score += temp
+                    # score += self._evaluate_quartet(quartet, self.PLAYER_ID)
                     
                     if (col + offset) < columns: # up-right
-                        for index_offset in range(self.CONNECT_WINDOW_LEN):
-                            quartet.append(rack[col + index_offset][row - index_offset])
-                        score += self._evaluate_quartet(quartet, self.PLAYER_ID)
+                        quartet = [rack[col][row],rack[col+1][row+1], rack[col+2][row+2], rack[col+3][row+3]]
+                        temp = self._evaluate_quartet(quartet, self.PLAYER_ID)
+                        # print(quartet)
+                        # print(temp)
+                        # score += temp
+                        # score += self._evaluate_quartet(quartet, self.PLAYER_ID)
                 
                 if (col + offset) < columns: # horizontal
-                    for index_offset in range(self.CONNECT_WINDOW_LEN):
-                        quartet.append(rack[col + index_offset][row])
-                    score += self._evaluate_quartet(quartet, self.PLAYER_ID)
+                    quartet = [rack[col][row], rack[col+1][row], rack[col+2][row], rack[col+3][row]]
+                    temp = self._evaluate_quartet(quartet, self.PLAYER_ID)
+                    # print(quartet)
+                    # print(temp)
+                    # score += temp
+                    # score += self._evaluate_quartet(quartet, self.PLAYER_ID)
 
-                    if (row + offset) < rows: # down-right
-                        for index_offset in range(self.CONNECT_WINDOW_LEN):
-                            quartet.append(rack[col + index_offset][row - index_offset])
-                        score += self._evaluate_quartet(quartet, self.PLAYER_ID)
+                    if (row - offset) >= 0: # down-right
+                        quartet = [rack[col][row+3],rack[col+1][row+2], rack[col+2][row+1], rack[col+3][row]]
+                        temp = self._evaluate_quartet(quartet, self.PLAYER_ID)
+                        print(quartet)
+                        print(temp)
+                        # score += temp
+                        # score += self._evaluate_quartet(quartet, self.PLAYER_ID)
+                        quartet = []
         return score
 
     # get next open column
