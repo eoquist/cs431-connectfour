@@ -45,7 +45,7 @@ class ComputerPlayer:
         play = 0
         for row in range(len(column_major_copy) - 1):
             if not (column_major_copy[row][-1] == 0):
-                # scores.append(0)
+                scores.append(0)
                 continue
             for column in range(len(column_major_copy[0]) - 1, 0, -1):
                 if column_major_copy[row][column] == self.EMPTY_SLOT:
@@ -56,7 +56,7 @@ class ComputerPlayer:
                     column_major_copy[row][column] = self.EMPTY_SLOT
                 else:
                     pass
-                    # scores.append(0)
+                    scores.append(0)
 
         max_score = max(scores)
         play = scores.index(max_score)
@@ -147,6 +147,11 @@ class ComputerPlayer:
         return score
     
     def _evaluate(self,board):
+        print("=======================")
+        print("BOARD")
+        for row in board:
+            print(row)
+        print("=======================")
         rows = len(board)
         columns = len(board[0])
         score = 0
