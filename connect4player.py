@@ -3,7 +3,10 @@ This Connect Four AI player is called by connect4.py
 It uses the minimax algorithm to choose which moves to make
 based on the difficulty level specified by the user on the 
 command-line. The difficulty level of the AI represents how 
-many plies the minimax algorithm will use
+many plies the minimax algorithm will use.
+
+To use minimax with alpha beta pruning you need to comment
+out _minimax() and uncomment _minimax_alpha_beta().
 """
 
 __author__ = "Emilee Oquist"    # Received help from Lucas, Jared
@@ -58,8 +61,16 @@ class ComputerPlayer:
         self.BEST_MOVE = -1
         self.BEST_SCORE = self.NEGATIVE_INFINITY
         tuple_to_list_copy = [list(tuple) for tuple in rack]
-        # score = self._minimax(tuple_to_list_copy, self.DIFFICULTY, self.PLAYER_ID)
-        score = self._minimax_alpha_beta(tuple_to_list_copy, self.DIFFICULTY, self.PLAYER_ID, self.NEGATIVE_INFINITY, self.INFINITY)
+
+        # timing
+        start_time = time.time()
+        # self._minimax(tuple_to_list_copy, self.DIFFICULTY, self.PLAYER_ID)
+        self._minimax_alpha_beta(tuple_to_list_copy, self.DIFFICULTY, self.PLAYER_ID, self.NEGATIVE_INFINITY, self.INFINITY)
+        end_time = time.time()
+        time_lapsed = end_time - start_time
+        # print("~{0} sec".format(round(time_lapsed, 7)))        # formatted stopwatch printing
+
+        # ensuring that a move gets made until board is full or a win is achieved
         if self.BEST_MOVE == -1:
             next_move = self._get_next_open_column(tuple_to_list_copy)
             return next_move
@@ -142,7 +153,7 @@ class ComputerPlayer:
                 if next_legal_move == -1:
                     continue
                 rack[column][next_legal_move] = player
-                minimax_score = self._minimax(rack, depth - 1, opponent_disc)
+                minimax_score = self._minimax_alpha_beta(rack, depth - 1, opponent_disc, alpha, beta)
                 best_score = max(best_score, minimax_score)
                 alpha = max(alpha, best_score)
                 rack[column][next_legal_move] = self.EMPTY_SLOT
@@ -159,7 +170,7 @@ class ComputerPlayer:
                 if next_legal_move == -1:
                     continue
                 rack[column][next_legal_move] = player
-                minimax_score = self._minimax(rack, depth - 1, opponent_disc)
+                minimax_score = self._minimax_alpha_beta(rack, depth - 1, opponent_disc, alpha, beta)
                 best_score = min(best_score, minimax_score)
                 beta = min(beta, best_score)
                 rack[column][next_legal_move] = self.EMPTY_SLOT
