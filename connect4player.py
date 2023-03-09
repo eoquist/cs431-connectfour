@@ -44,7 +44,7 @@ class ComputerPlayer:
         :param difficulty_level: int representing the difficulty level (plies)
         """
         self.PLAYER_ID = id
-        self.DIFFICULTY = difficulty_level
+        self.DIFFICULTY = abs(difficulty_level)
         self.BEST_MOVE = -1
         self.BEST_SCORE = self.NEGATIVE_INFINITY
 
@@ -58,10 +58,11 @@ class ComputerPlayer:
         self.BEST_MOVE = -1
         self.BEST_SCORE = self.NEGATIVE_INFINITY
         tuple_to_list_copy = [list(tuple) for tuple in rack]
-        score = self._minimax(tuple_to_list_copy,
-                              self.DIFFICULTY, self.PLAYER_ID)
-        if rack[self.BEST_MOVE][-1] != 0:
-            return self._get_next_move(self.BEST_MOVE)
+        # score = self._minimax(tuple_to_list_copy, self.DIFFICULTY, self.PLAYER_ID)
+        score = self._minimax_alpha_beta(tuple_to_list_copy, self.DIFFICULTY, self.PLAYER_ID, self.NEGATIVE_INFINITY, self.INFINITY)
+        if self.BEST_MOVE == -1:
+            next_move = self._get_next_open_column(tuple_to_list_copy)
+            return next_move
         return self.BEST_MOVE
 
 
@@ -108,6 +109,62 @@ class ComputerPlayer:
                 minimax_score = self._minimax(rack, depth - 1, opponent_disc)
                 best_score = min(best_score, minimax_score)
                 rack[column][next_legal_move] = self.EMPTY_SLOT
+
+        return best_score
+    
+
+    def _minimax_alpha_beta(self, rack, depth, player, alpha, beta):
+        """
+        Recursively search for the best move to make using the minimax algorithm 
+        with alpha-beta pruning.
+        :param rack: a 2d column-major array of the game state.
+        :param depth: the current depth of the search tree.
+        :param player: the ID of the current player.
+        :param alpha: the best score that the maximizing player found.
+        :param beta: the best score that the minimizing player found.
+        :return: A numeric score representing the quality of the current game state.
+        """
+        current_state_score = self._evaluate(rack)
+
+        # terminal state
+        if self._is_terminal_condition(depth, current_state_score):
+            return current_state_score
+
+        opponent_disc = self.PLAYER2_DISC
+        if player == self.PLAYER2_DISC:
+            opponent_disc = self.PLAYER1_DISC
+
+        # maximizing player
+        if player == self.PLAYER_ID:
+            best_score = self.NEGATIVE_INFINITY
+            for column in range(len(rack)):
+                next_legal_move = self._get_next_move(rack, column)
+                if next_legal_move == -1:
+                    continue
+                rack[column][next_legal_move] = player
+                minimax_score = self._minimax(rack, depth - 1, opponent_disc)
+                best_score = max(best_score, minimax_score)
+                alpha = max(alpha, best_score)
+                rack[column][next_legal_move] = self.EMPTY_SLOT
+                if (depth == self.DIFFICULTY) and (best_score > self.BEST_SCORE):
+                    self.BEST_SCORE = best_score
+                    self.BEST_MOVE = column
+                if alpha >= beta: 
+                    break
+        # minimizing player
+        else:
+            best_score = self.INFINITY
+            for column in range(len(rack)):
+                next_legal_move = self._get_next_move(rack, column)
+                if next_legal_move == -1:
+                    continue
+                rack[column][next_legal_move] = player
+                minimax_score = self._minimax(rack, depth - 1, opponent_disc)
+                best_score = min(best_score, minimax_score)
+                beta = min(beta, best_score)
+                rack[column][next_legal_move] = self.EMPTY_SLOT
+                if alpha >= beta:
+                    break
 
         return best_score
 
@@ -189,7 +246,7 @@ class ComputerPlayer:
 
     def _get_next_move(self, rack, column_index):
         """
-        Get the next available column index to place a disc in.
+        Get the next available row index to place a disc in based on the given column_index.
         :param rack: a 2d column-major array of the game state.
         :param column_index: the index of the column to check.
         :return: the index of the next available row in the column, or -1 if the column is full.
@@ -197,6 +254,18 @@ class ComputerPlayer:
         for row in range(len(rack[column_index])):
             if rack[column_index][row] == 0:
                 return row
+        return -1
+    
+
+    def _get_next_open_column(self, rack):
+        """
+        Get the next available column index after the best moves are exhausted.
+        :param rack: a 2d column-major array of the game state.
+        :return: the next move that has to be made that will result in a win or loss.
+        """
+        for column in range(len(rack)):
+            if rack[column][-1] == 0:
+                return column
         return -1
 
 
