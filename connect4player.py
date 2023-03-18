@@ -153,6 +153,10 @@ class ComputerPlayer:
                 if next_legal_move == -1:
                     continue
                 rack[column][next_legal_move] = player
+                """
+                If you evaluate the board here fully and theres a win, should it just set best score and column and return
+                or should it just have a much higher weight on it?
+                """
                 minimax_score = self._minimax_alpha_beta(rack, depth - 1, opponent_disc, alpha, beta)
                 best_score = max(best_score, minimax_score)
                 alpha = max(alpha, best_score)
